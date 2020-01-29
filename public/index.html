@@ -1,0 +1,33 @@
+<html>
+
+<head>
+  <title>Express</title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+
+<body>
+  <h1>Express</h1>
+  <p>Welcome to Express</p>
+  <div id="table"></div>
+</body>
+  <script src="./browserMqtt.js"></script>
+  <script>
+    // let counter = 0;
+    // window.setInterval(() => {
+    //   document.getElementById("table").innerHTML = `<div>${counter}</div>`;
+    //   counter++;
+    // }, 1000);
+
+    const client = mqtt.connect('ws://beetrootmonkey.com:9001'); // you add a ws:// url here
+    client.subscribe("test/message");
+
+    client.on("message", function (topic, payload) {
+      console.log([topic, payload].join(": "));
+    });
+
+    window.publish = (message) => {
+      client.publish("test/message", message)
+    }
+
+  </script>
+</html>
