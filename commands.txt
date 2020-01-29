@@ -1,0 +1,3 @@
+mqtt pub -t 'test/message' -h 'beetrootmonkey.com' -m 'from MQTT.js'
+
+mqtt sub -t 'test/message' -h 'beetrootmonkey.com' -v
