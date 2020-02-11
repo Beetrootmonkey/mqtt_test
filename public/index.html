@@ -1,33 +1,42 @@
 <html>
+  <head>
+    <title>MQTT-Client</title>
+    <link rel="stylesheet" href="./stylesheets/style.css">
+  </head>
 
-<head>
-  <title>Express</title>
-  <link rel="stylesheet" href="/stylesheets/style.css">
-</head>
-
-<body>
-  <h1>Express</h1>
-  <p>Welcome to Express</p>
-  <div id="table"></div>
-</body>
+  <body>
+    <div class="sheet">
+      <h1>MQTT-Client</h1>
+      <h2>Topic: 'test/message'</h2>
+      <div id="table">- Noch keine Daten erhalten -</div>
+    </div>
+  </body>
   <script src="./browserMqtt.js"></script>
+
   <script>
-    // let counter = 0;
-    // window.setInterval(() => {
-    //   document.getElementById("table").innerHTML = `<div>${counter}</div>`;
-    //   counter++;
-    // }, 1000);
-
     const client = mqtt.connect('ws://beetrootmonkey.com:9001'); // you add a ws:// url here
-    client.subscribe("test/message");
+    client.subscribe('test/message');
 
-    client.on("message", function (topic, payload) {
-      console.log([topic, payload].join(": "));
+    client.on('message', function (topic, payload) {
+      console.log(`${topic}: ${payload}`);
+      const obj = JSON.parse(payload);
+      const date = new Date(obj.time);
+      const options = {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      };
+      const time = date.toLocaleDateString('de-DE', options);
+      document.getElementById('table').innerHTML =
+        `<div>Letzte Messung: ${time}<br/>Temperatur: ${obj.temp} &#x00b0;C<br/>Feuchtigkeit: ${obj.hum}%</div>`;
     });
 
     window.publish = (message) => {
-      client.publish("test/message", message)
-    }
+      client.publish('test/message', message);
+    };
 
   </script>
 </html>
