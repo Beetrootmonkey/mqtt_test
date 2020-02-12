@@ -1,18 +1,58 @@
 <html>
   <head>
-    <title>MQTT-Client</title>
+    <title>Temperaturen</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="./stylesheets/style.css">
   </head>
-
   <body>
-    <div class="sheet">
-      <h1>MQTT-Client</h1>
-      <h2>Topic: 'test/message'</h2>
-      <div id="table">- Noch keine Daten erhalten -</div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+
+    <div class="page-header">
+      <div class="container">
+        <div class="row">
+          <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+            <div class="page-caption">
+              <h1 class="page-title">Temperaturmessungen</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-section">
+      <div class="container">
+        <div class="card-block bg-white mb30">
+          <div class="row">
+            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+              <div class="section-title mb-0">
+                <h2>RaspberryPi Projekt</h2>
+                <p>In der folgenden Tabelle können Sie die gemessenen Werte vom RaspberryPi entnehmen. </p>
+
+                <table class="table table-striped table-hover text-center" >
+                  <thead class="thead-light">
+                    <tr>
+                      <th scope="col">Uhrzeit</th>
+                      <th scope="col">Temperatur</th>
+                      <th scope="col">Luftfeuchtigkeit</th>
+                    </tr>
+                  <thead>
+                  <tbody id="table">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 text-center">
+            Erstellt von Nicolai, Lukas und Lia
+          </div>
+        </div>
+      </div>
     </div>
   </body>
   <script src="./browserMqtt.js"></script>
-
   <script>
     const client = mqtt.connect('ws://beetrootmonkey.com:9001'); // you add a ws:// url here
     client.subscribe('test/message');
@@ -20,22 +60,53 @@
     client.on('message', function (topic, payload) {
       console.log(`${topic}: ${payload}`);
       const obj = JSON.parse(payload);
-      const date = new Date(obj.time);
-      const options = {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      };
-      const time = date.toLocaleDateString('de-DE', options);
-      document.getElementById('table').innerHTML =
-        `<div>Letzte Messung: ${time}<br/>Temperatur: ${obj.temp} &#x00b0;C<br/>Feuchtigkeit: ${obj.hum}%</div>`;
+      addToData(obj);
     });
 
     window.publish = (message) => {
       client.publish('test/message', message);
+    };
+
+    /////////////////////////////////////////////////////
+
+    const data = JSON.parse(window.localStorage.getItem('data')) || [];
+    const maxElements = 5;
+
+    const rebuildTable = () => {
+      document.getElementById('table').innerHTML =
+        [...data].sort((a, b) => new Date(a.time) < new Date(b.time) ? 1 : -1).map((e) => {
+          const date = new Date(e.time);
+          const options = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          };
+          const time = date.toLocaleDateString('de-DE', options);
+          const temp = e.temp.toFixed(1);
+          const hum = e.hum.toFixed(1);
+
+          return `<tr>
+                      <td>${time}</td>
+                      <td>${temp} &#x00b0;C</td>
+                      <td>${hum}%</td>
+                    </tr>`;
+        }).join('');
+    };
+
+    rebuildTable();
+
+    const addToData = (obj) => {
+      if (data.length >= maxElements) {
+        data.shift();
+      }
+      data.push(obj);
+
+      window.localStorage.setItem('data', JSON.stringify(data));
+
+      rebuildTable();
     };
 
   </script>
